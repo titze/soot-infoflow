@@ -70,6 +70,8 @@ public abstract class BaseEntryPointCreator implements IEntryPointCreator {
 	private boolean substituteCallParams = false;
 	private List<String> substituteClasses;
 	
+	public HashMap<String, List<String>> containedClasses = new HashMap<String, List<String>>();
+	
 	public void setSubstituteCallParams(boolean b){
 		substituteCallParams = b;
 	}
@@ -128,6 +130,14 @@ public abstract class BaseEntryPointCreator implements IEntryPointCreator {
 	}
 	
 	protected Stmt buildMethodCall(SootMethod currentMethod, JimpleBody body, Local classLocal, LocalGenerator gen){
+		List<String> list = this.containedClasses.get(currentMethod.getDeclaringClass().getName());
+		if (list == null) {
+			list = new ArrayList<String>();
+			this.containedClasses.put(currentMethod.getDeclaringClass().getName(), list);
+		}
+		if (!list.contains(currentMethod.getSignature())) {
+			list.add(currentMethod.getSignature());
+		}
 		return buildMethodCall(currentMethod, body, classLocal, gen, Collections.<SootClass>emptySet());
 	}
 
