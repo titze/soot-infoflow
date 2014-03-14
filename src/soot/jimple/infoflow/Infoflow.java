@@ -465,6 +465,8 @@ public class Infoflow extends AbstractInfoflow {
 		Set<AbstractionAtSink> res = forwardProblem.getResults();
 		computeTaintPaths(res);
 		
+		results.setiCfg(iCfg);
+		
 		if (results.getResults().isEmpty())
 			logger.warn("No results found.");
 		else for (Entry<SinkInfo, Set<SourceInfo>> entry : results.getResults().entrySet()) {

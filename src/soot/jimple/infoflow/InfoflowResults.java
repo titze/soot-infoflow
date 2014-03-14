@@ -24,6 +24,7 @@ import org.slf4j.LoggerFactory;
 import soot.Value;
 import soot.jimple.InvokeExpr;
 import soot.jimple.Stmt;
+import soot.jimple.infoflow.solver.IInfoflowCFG;
 import soot.jimple.infoflow.util.ConcurrentHashSet;
 import soot.jimple.infoflow.util.MyConcurrentHashMap;
 import soot.tagkit.LineNumberTag;
@@ -162,6 +163,7 @@ public class InfoflowResults {
 	
 	private final MyConcurrentHashMap<SinkInfo, Set<SourceInfo>> results =
 			new MyConcurrentHashMap<SinkInfo, Set<SourceInfo>>();
+	private IInfoflowCFG iCfg;
 	
 	public InfoflowResults() {
 		
@@ -372,6 +374,14 @@ public class InfoflowResults {
 				sb.append(sink);
 			}
 		return sb.toString();
+	}
+
+	public IInfoflowCFG getiCfg() {
+		return iCfg;
+	}
+
+	public void setiCfg(IInfoflowCFG iCfg) {
+		this.iCfg = iCfg;
 	}
 
 }
