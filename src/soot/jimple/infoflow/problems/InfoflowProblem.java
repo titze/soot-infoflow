@@ -330,8 +330,15 @@ public class InfoflowProblem extends AbstractInfoflowProblem {
 					if (targetType != null) {
 						if (assignStmt.getLeftOp() instanceof ArrayRef)
 							targetType = buildArrayOrAddDimension(targetType);
-						else if (assignStmt.getRightOp() instanceof ArrayRef)
-							targetType = ((ArrayType) targetType).getElementType();
+//						else if (assignStmt.getRightOp() instanceof ArrayRef)
+//							targetType = ((ArrayType) targetType).getElementType();
+						else if (assignStmt.getRightOp() instanceof ArrayRef){
+							if (targetType instanceof ArrayType) {
+								targetType = ((ArrayType) targetType).getElementType();
+							} else {
+								targetType = ((ArrayRef)assignStmt.getRightOp()).getType();
+							}
+						}
 					}
 				}
 				else
