@@ -200,6 +200,7 @@ public class IFDSSolver<N,D extends LinkedNode<D>,M,I extends BiDiInterprocedura
 		try {
 			executor.awaitCompletion();
 		} catch (InterruptedException e) {
+			Thread.currentThread().interrupt();
 			e.printStackTrace();
 		}
 		Throwable exception = executor.getException();

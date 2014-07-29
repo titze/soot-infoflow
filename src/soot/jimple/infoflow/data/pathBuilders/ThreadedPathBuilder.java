@@ -241,6 +241,7 @@ public class ThreadedPathBuilder implements IAbstractionPathBuilder {
 		} catch (InterruptedException ex) {
 			logger.error("Could not wait for path executor completion: {0}", ex.getMessage());
 			ex.printStackTrace();
+			Thread.currentThread().interrupt();
 		}
     	
     	logger.info("Path proecssing took {} seconds in total for {} edges",
@@ -267,6 +268,7 @@ public class ThreadedPathBuilder implements IAbstractionPathBuilder {
 		} catch (InterruptedException ex) {
 			logger.error("Could not wait for path executor completion: {0}", ex.getMessage());
 			ex.printStackTrace();
+			Thread.currentThread().interrupt();
 		}
     	
     	logger.info("Path extension took {} seconds.", (System.nanoTime() - beforePathTracking) / 1E9);

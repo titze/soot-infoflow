@@ -433,6 +433,13 @@ public class Infoflow extends AbstractInfoflow {
 				}
 				catch (InterruptedException e) {
 					logger.error("Could not wait for executor termination", e);
+					executor.shutdownNow();
+					try {
+						executor.awaitTermination(1, TimeUnit.SECONDS);
+					} catch (InterruptedException e1) {
+						System.out.println("Executor was not shut down completely...");
+					}
+					Thread.currentThread().interrupt();
 				}
 			}
 			else

@@ -116,6 +116,9 @@ public abstract class BaseEntryPointCreator implements IEntryPointCreator {
 	protected abstract SootMethod createDummyMainInternal(List<String> methods, SootMethod emptySootMethod);
 	
 	protected SootMethod createEmptyMainMethod(JimpleBody body){
+		if (Thread.interrupted()){ 
+    		throw new RuntimeException("Interrupting");
+    	}
 		SootMethod mainMethod = new SootMethod("dummyMainMethod", new ArrayList<Type>(), VoidType.v());
 		body.setMethod(mainMethod);
 		mainMethod.setActiveBody(body);

@@ -130,6 +130,7 @@ public class RecursivePathBuilder implements IAbstractionPathBuilder {
 		} catch (InterruptedException ex) {
 			logger.error("Could not wait for path executor completion: {0}", ex.getMessage());
 			ex.printStackTrace();
+			Thread.currentThread().interrupt();
 		}
     	executor.shutdown();
     	logger.debug("Path reconstruction done.");
