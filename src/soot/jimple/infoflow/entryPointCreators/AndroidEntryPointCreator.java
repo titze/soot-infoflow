@@ -24,16 +24,23 @@ import org.slf4j.LoggerFactory;
 
 import soot.IntType;
 import soot.Local;
+import soot.RefLikeType;
+import soot.RefType;
 import soot.Scene;
 import soot.SootClass;
 import soot.SootMethod;
+import soot.Type;
 import soot.Unit;
 import soot.Value;
+import soot.VoidType;
 import soot.javaToJimple.LocalGenerator;
+import soot.jimple.AssignStmt;
 import soot.jimple.IntConstant;
+import soot.jimple.InvokeStmt;
 import soot.jimple.Jimple;
 import soot.jimple.JimpleBody;
 import soot.jimple.NopStmt;
+import soot.jimple.StaticInvokeExpr;
 import soot.jimple.Stmt;
 import soot.jimple.infoflow.data.SootMethodAndClass;
 import soot.jimple.infoflow.util.SootMethodRepresentationParser;
@@ -402,7 +409,7 @@ public class AndroidEntryPointCreator extends BaseEntryPointCreator implements I
 		if (DEBUG || Options.v().validate())
 			mainMethod.getActiveBody().validate();
 		
-		logger.info("Generated main method:\n{}", body);
+//		logger.info("Generated main method:\n{}", body);
 		return mainMethod;
 	}
 	
@@ -490,6 +497,35 @@ public class AndroidEntryPointCreator extends BaseEntryPointCreator implements I
 			}
 		}
 		addCallbackMethods(currentClass);
+		
+		{
+			for(SootMethod currentMethod : currentClass.getMethods()){
+				if (currentMethod.isPublic() && !currentMethod.getReturnType().equals(VoidType.v())) {
+
+					Stmt buildMethodCall = buildMethodCall(currentMethod, body, classLocal, generator);
+					Value rhs = ((AssignStmt)buildMethodCall).getLeftOp();
+
+					Type typ;
+					if((rhs.getType() instanceof RefLikeType)) {
+						typ = RefType.v("java.lang.Object");
+					} else {
+						typ = IntType.v();
+					}
+					StaticInvokeExpr virt = Jimple.v().newStaticInvokeExpr(
+							Scene.v().makeMethodRef(
+									Scene.v().getSootClass("PROVIDERLEAK"), 
+									"send_to_attacker",
+									Collections.<Type>singletonList(typ),
+									VoidType.v(), 
+									true),
+									rhs);
+					InvokeStmt newInvokeStmt = Jimple.v().newInvokeStmt(virt);
+					body.getUnits().add(newInvokeStmt);
+
+				}
+			}
+		}
+		
 		body.getUnits().add(endWhileStmt);
 		if (hasAdditionalMethods)
 			createIfStmt(startWhileStmt);
@@ -612,6 +648,65 @@ public class AndroidEntryPointCreator extends BaseEntryPointCreator implements I
 		body.getUnits().add(endWhile2Stmt);
 		if (hasAdditionalMethods)
 			createIfStmt(startWhile2Stmt);
+		
+		//changed titze
+		{
+			for(SootMethod currentMethod : currentClass.getMethods()){
+				if (currentMethod.isPublic() && !currentMethod.getReturnType().equals(VoidType.v())) {
+
+					Stmt buildMethodCall = buildMethodCall(currentMethod, body, classLocal, generator);
+					Value rhs = ((AssignStmt)buildMethodCall).getLeftOp();
+
+					//					Local lhs = generator.generateLocal(RefType.v("java.lang.Object"));
+					//					AssignStmt stmt;
+					//					if((rhs.getType() instanceof RefLikeType)) {
+					//						lhs = (Local)rhs;
+					//					} else {
+					//						//primitive type; insert boxing code
+					//					    RefType boxedType = ((PrimType)rhs.getType()).boxedType();
+					//						SootMethodRef ref = Scene.v().makeMethodRef(
+					//							      boxedType.getSootClass(),
+					//							      "valueOf",
+					//							      Collections.<Type>singletonList(rhs.getType()),
+					//							      boxedType,
+					//							      true
+					//							    );
+					//						stmt = Jimple.v().newAssignStmt(lhs, Jimple.v().newStaticInvokeExpr(ref,rhs));
+					//						body.getUnits().add(stmt);
+					//					}
+					//
+					//					VirtualInvokeExpr virt = Jimple.v().newVirtualInvokeExpr(
+					//							lhs,
+					//							Scene.v().makeMethodRef(
+					//									Scene.v().getSootClass("SERVICELEAK"), 
+					//									"m",
+					//									Collections.<Type>emptyList(),
+					//									RefType.v("java.lang.Object"), 
+					//									false));
+					//					InvokeStmt newInvokeStmt = Jimple.v().newInvokeStmt(virt);
+					//					body.getUnits().add(newInvokeStmt);
+
+					Type typ;
+					if((rhs.getType() instanceof RefLikeType)) {
+						typ = RefType.v("java.lang.Object");
+					} else {
+						typ = IntType.v();
+					}
+					StaticInvokeExpr virt = Jimple.v().newStaticInvokeExpr(
+							Scene.v().makeMethodRef(
+									Scene.v().getSootClass("SERVICELEAK"), 
+									"send_to_attacker",
+									Collections.<Type>singletonList(typ),
+									VoidType.v(), 
+									true),
+									rhs);
+					InvokeStmt newInvokeStmt = Jimple.v().newInvokeStmt(virt);
+					body.getUnits().add(newInvokeStmt);
+
+				}
+			}
+
+		}
 		
 		//onUnbind:
 		Stmt onDestroyStmt = Jimple.v().newNopStmt();
