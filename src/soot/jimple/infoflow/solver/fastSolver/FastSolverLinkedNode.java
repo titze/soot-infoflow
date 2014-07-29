@@ -11,5 +11,5 @@ import heros.solver.LinkedNode;
 public interface FastSolverLinkedNode<D> extends LinkedNode<D> {
 
 	public void setPredecessor(D predecessor);
-	
+	public void setCallingContext(D callingContext);
 }
