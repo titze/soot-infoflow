@@ -587,8 +587,6 @@ public class Infoflow extends AbstractInfoflow {
 		
 		computeTaintPaths(res);
 		
-		results.setiCfg(iCfg);
-		
 		if (results.getResults().isEmpty())
 			logger.warn("No results found.");
 		else for (Entry<ResultSinkInfo, Set<ResultSourceInfo>> entry : results.getResults().entrySet()) {
