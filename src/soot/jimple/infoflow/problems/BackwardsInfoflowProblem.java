@@ -181,8 +181,15 @@ public class BackwardsInfoflowProblem extends AbstractInfoflowProblem {
 							Type newType = source.getAccessPath().getBaseType();
 							if (leftValue instanceof ArrayRef)
 								newType = buildArrayOrAddDimension(newType);
-							else if (defStmt.getRightOp() instanceof ArrayRef)
-								newType = ((ArrayType) newType).getElementType();
+							else if (defStmt.getRightOp() instanceof ArrayRef) {
+								if (newType instanceof ArrayType) {
+									newType = ((ArrayType) newType).getElementType();
+								} else {
+									System.out.println("no Array type!");
+									newType = ((ArrayRef)defStmt.getRightOp()).getType();
+								}
+							}
+							
 							
 							// If this is an unrealizable typecast, drop the abstraction
 							if (defStmt.getRightOp() instanceof CastExpr) {

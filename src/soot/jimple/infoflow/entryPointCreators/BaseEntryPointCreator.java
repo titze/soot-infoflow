@@ -4,7 +4,7 @@
  * are made available under the terms of the GNU Lesser Public License v2.1
  * which accompanies this distribution, and is available at
  * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
- * 
+ *
  * Contributors: Christian Fritz, Steven Arzt, Siegfried Rasthofer, Eric
  * Bodden, and others.
  ******************************************************************************/
@@ -70,10 +70,10 @@ public abstract class BaseEntryPointCreator implements IEntryPointCreator {
 	private List<String> substituteClasses;
 
 	private final Set<SootMethod> failedMethods = new HashSet<>();
-	
+
 	protected final String DUMMY_CLASS_NAME = "dummyMainClass";
 	protected final String DUMMY_METHOD_NAME = "dummyMainMethod";
-	
+
 	/**
 	 * Returns a copy of all classes that could not be instantiated properly
 	 * @return The classes where the constructor could not be generated
@@ -81,7 +81,7 @@ public abstract class BaseEntryPointCreator implements IEntryPointCreator {
 	public Set<SootClass> getFailedClasses(){
 		return new HashSet<SootClass>(failedClasses);
 	}
-	
+
     /**
      * Returns all methods from from methodsToCall, where no call was possible
      * @return A Set of methods that were not called in the main method
@@ -89,11 +89,11 @@ public abstract class BaseEntryPointCreator implements IEntryPointCreator {
     public Set<SootMethod> getFailedMethods(){
     	return new HashSet<SootMethod>(failedMethods);
     }
-    
+
     public void setSubstituteCallParams(boolean b){
 		substituteCallParams = b;
 	}
-	
+
 	public void setSubstituteClasses(List<String> l){
 		substituteClasses = l;
 	}
@@ -104,17 +104,17 @@ public abstract class BaseEntryPointCreator implements IEntryPointCreator {
 		if (substituteCallParams)
 			for (String className : substituteClasses)
 				Scene.v().forceResolve(className, SootClass.BODIES).setApplicationClass();
-		
+
 		return this.createDummyMainInternal();
 	}
-	
+
 	@Override
 	public SootMethod createDummyMain(SootMethod dummyMainMethod) {
 		// Load the substitution classes
 		if (substituteCallParams)
 			for (String className : substituteClasses)
 				Scene.v().forceResolve(className, SootClass.BODIES).setApplicationClass();
-		
+
 		return this.createDummyMainInternal(dummyMainMethod);
 	}
 
@@ -122,14 +122,14 @@ public abstract class BaseEntryPointCreator implements IEntryPointCreator {
 		SootMethod emptySootMethod = createEmptyMainMethod(Jimple.v().newBody());
 		return createDummyMainInternal(emptySootMethod);
 	}
-	
+
 	/**
 	 * Implementors need to overwrite this method for providing the actual dummy
 	 * main method
 	 * @return The generated dummy main method
 	 */
 	protected abstract SootMethod createDummyMainInternal(SootMethod emptySootMethod);
-	
+
 	/**
 	 * Creates a new, empty main method containing the given body
 	 * @param body The body to be used for the new main method
@@ -150,18 +150,18 @@ public abstract class BaseEntryPointCreator implements IEntryPointCreator {
 			mainClass = new SootClass(DUMMY_CLASS_NAME);
 			Scene.v().addClass(mainClass);
 		}
-		
+
 		SootMethod mainMethod = new SootMethod(methodName, new ArrayList<Type>(), VoidType.v());
 		body.setMethod(mainMethod);
 		mainMethod.setActiveBody(body);
 		mainClass.addMethod(mainMethod);
 		// First add class to scene, then make it an application class
-		// as addClass contains a call to "setLibraryClass" 
+		// as addClass contains a call to "setLibraryClass"
 		mainClass.setApplicationClass();
 		mainMethod.setModifiers(Modifier.PUBLIC | Modifier.STATIC);
 		return mainMethod;
 	}
-	
+
 	/**
 	 * Builds a new invocation statement that invokes the given method
 	 * @param methodToCall The method to call
@@ -184,20 +184,20 @@ public abstract class BaseEntryPointCreator implements IEntryPointCreator {
 		assert methodToCall != null : "Current method was null";
 		assert body != null : "Body was null";
 		assert gen != null : "Local generator was null";
-		
+
 		if (classLocal == null && !methodToCall.isStatic()) {
-			logger.warn("Cannot call method {}, because there is no local for base object: {}", 
+			logger.warn("Cannot call method {}, because there is no local for base object: {}",
 					methodToCall, methodToCall.getDeclaringClass());
 			failedMethods.add(methodToCall);
 			return null;
 		}
-		
+
 		final InvokeExpr invokeExpr;
 		List<Value> args = new LinkedList<Value>();
 		if(methodToCall.getParameterCount()>0){
 			for (Type tp : methodToCall.getParameterTypes())
 				args.add(getValueForType(body, gen, tp, new HashSet<SootClass>(), parentClasses));
-			
+
 			if(methodToCall.isStatic())
 				invokeExpr = Jimple.v().newStaticInvokeExpr(methodToCall.makeRef(), args);
 			else {
@@ -218,22 +218,22 @@ public abstract class BaseEntryPointCreator implements IEntryPointCreator {
 					invokeExpr = Jimple.v().newVirtualInvokeExpr(classLocal, methodToCall.makeRef());
 			}
 		}
-		 
+
 		Stmt stmt;
 		if (!(methodToCall.getReturnType() instanceof VoidType)) {
 			Local returnLocal = gen.generateLocal(methodToCall.getReturnType());
 			stmt = Jimple.v().newAssignStmt(returnLocal, invokeExpr);
-			
+
 		} else {
 			stmt = Jimple.v().newInvokeStmt(invokeExpr);
 		}
 		body.getUnits().add(stmt);
-		
+
 		// Clean up
 		for (Object val : args)
 			if (val instanceof Local && ((Value) val).getType() instanceof RefType)
 				body.getUnits().add(Jimple.v().newAssignStmt((Value) val, NullConstant.v()));
-		
+
 		return stmt;
 	}
 
@@ -260,7 +260,7 @@ public abstract class BaseEntryPointCreator implements IEntryPointCreator {
 			return getSimpleDefaultValue(tp.toString());
 		else if (tp instanceof RefType) {
 			SootClass classToType = ((RefType) tp).getSootClass();
-			
+
 			if(classToType != null){
 				// If we have a parent class compatible with this type, we use
 				// it before we check any other option
@@ -273,12 +273,12 @@ public abstract class BaseEntryPointCreator implements IEntryPointCreator {
 
 				// Create a new instance to plug in here
 				Value val = generateClassConstructor(classToType, body, constructionStack, parentClasses);
-				
+
 				// If we cannot create a parameter, we try a null reference.
 				// Better than not creating the whole invocation...
 				if(val == null)
 					return NullConstant.v();
-				
+
 				return val;
 			}
 		}
@@ -296,7 +296,7 @@ public abstract class BaseEntryPointCreator implements IEntryPointCreator {
 		}
 		throw new RuntimeException("Should never see me");
     }
-	
+
 	/**
 	 * Constructs an array of the given type with a single element of this type
 	 * in the given method
@@ -320,7 +320,7 @@ public abstract class BaseEntryPointCreator implements IEntryPointCreator {
 				IntConstant.v(1));
 		AssignStmt assignArray = Jimple.v().newAssignStmt(local, newArrayExpr);
 		body.getUnits().add(assignArray);
-		
+
 		// Generate a single element in the array
 		AssignStmt assign = Jimple.v().newAssignStmt
 				(Jimple.v().newArrayRef(local, IntConstant.v(0)),
@@ -341,7 +341,7 @@ public abstract class BaseEntryPointCreator implements IEntryPointCreator {
 		return this.generateClassConstructor(createdClass, body, new HashSet<SootClass>(),
 				Collections.<SootClass>emptySet());
 	}
-	
+
 	/**
 	 * Generates code which creates a new instance of the given class.
 	 * @param createdClass The class of which to create an instance
@@ -378,7 +378,7 @@ public abstract class BaseEntryPointCreator implements IEntryPointCreator {
 			Set<SootClass> constructionStack, Set<SootClass> parentClasses) {
 		if (createdClass == null || this.failedClasses.contains(createdClass))
 			return null;
-		
+
 		// We cannot create instances of phantom classes as we do not have any
 		// constructor information for them
 		if (createdClass.isPhantom() || createdClass.isPhantomClass()) {
@@ -392,21 +392,21 @@ public abstract class BaseEntryPointCreator implements IEntryPointCreator {
 		// if sootClass is simpleClass:
 		if (isSimpleType(createdClass.toString())) {
 			Local varLocal =  generator.generateLocal(getSimpleTypeFromType(createdClass.getType()));
-			
+
 			AssignStmt aStmt = Jimple.v().newAssignStmt(varLocal, getSimpleDefaultValue(createdClass.toString()));
 			body.getUnits().add(aStmt);
 			return varLocal;
 		}
-		
+
 		boolean isInnerClass = createdClass.getName().contains("$");
 		String outerClass = isInnerClass ? createdClass.getName().substring
 				(0, createdClass.getName().lastIndexOf("$")) : "";
-		
+
 		// Make sure that we don't run into loops
 		if (!constructionStack.add(createdClass)) {
 			logger.warn("Ran into a constructor generation loop for class " + createdClass
 					+ ", substituting with null...");
-			Local tempLocal = generator.generateLocal(RefType.v(createdClass));			
+			Local tempLocal = generator.generateLocal(RefType.v(createdClass));
 			AssignStmt assignStmt = Jimple.v().newAssignStmt(tempLocal, NullConstant.v());
 			body.getUnits().add(assignStmt);
 			return tempLocal;
@@ -419,7 +419,7 @@ public abstract class BaseEntryPointCreator implements IEntryPointCreator {
 					classes = Scene.v().getActiveHierarchy().getImplementersOf(createdClass);
 				else
 					classes = Scene.v().getActiveHierarchy().getSubclassesOf(createdClass);
-				
+
 				// Generate an instance of the substitution class. If we fail,
 				// try the next substitution. If we don't find any possible
 				// substitution, we're in trouble
@@ -442,14 +442,14 @@ public abstract class BaseEntryPointCreator implements IEntryPointCreator {
 				return null;
 			}
 		}
-		else{			
+		else{
 			// Find a constructor we can invoke. We do this first as we don't want
 			// to change anything in our method body if we cannot create a class
 			// instance anyway.
 			for (SootMethod currentMethod : createdClass.getMethods()) {
 				if (currentMethod.isPrivate() || !currentMethod.isConstructor())
 					continue;
-				
+
 				List<Value> params = new LinkedList<Value>();
 				for (Type type : currentMethod.getParameterTypes()) {
 					// We need to check whether we have a reference to the
@@ -466,9 +466,9 @@ public abstract class BaseEntryPointCreator implements IEntryPointCreator {
 
 				// Build the "new" expression
 				NewExpr newExpr = Jimple.v().newNewExpr(RefType.v(createdClass));
-				Local tempLocal = generator.generateLocal(RefType.v(createdClass));			
+				Local tempLocal = generator.generateLocal(RefType.v(createdClass));
 				AssignStmt assignStmt = Jimple.v().newAssignStmt(tempLocal, newExpr);
-				body.getUnits().add(assignStmt);		
+				body.getUnits().add(assignStmt);
 
 				// Create the constructor invocation
 				InvokeExpr vInvokeExpr;
@@ -478,14 +478,14 @@ public abstract class BaseEntryPointCreator implements IEntryPointCreator {
 					vInvokeExpr = Jimple.v().newSpecialInvokeExpr(tempLocal, currentMethod.makeRef(), params);
 
 				// Make sure to store return values
-				if (!(currentMethod.getReturnType() instanceof VoidType)) { 
+				if (!(currentMethod.getReturnType() instanceof VoidType)) {
 					Local possibleReturn = generator.generateLocal(currentMethod.getReturnType());
 					AssignStmt assignStmt2 = Jimple.v().newAssignStmt(possibleReturn, vInvokeExpr);
 					body.getUnits().add(assignStmt2);
 				}
 				else
 					body.getUnits().add(Jimple.v().newInvokeStmt(vInvokeExpr));
-					
+
 				return tempLocal;
 			}
 
@@ -594,13 +594,13 @@ public abstract class BaseEntryPointCreator implements IEntryPointCreator {
 			// Do we have a direct match?
 			if (act.getName().equals(expected.getName()))
 				return true;
-			
+
 			// If we expect an interface, the current class might implement it
 			if (expected.isInterface())
 				for (SootClass intf : act.getInterfaces())
 					if (intf.getName().equals(expected.getName()))
 						return true;
-			
+
 			// If we cannot continue our search further up the hierarchy, the
 			// two types are incompatible
 			if (!act.hasSuperclass())
@@ -608,7 +608,7 @@ public abstract class BaseEntryPointCreator implements IEntryPointCreator {
 			act = act.getSuperclass();
 		}
 	}
-	
+
 	/**
 	 * Eliminates all loops of length 0 (if a goto <if a>)
 	 * @param body The body from which to eliminate the self-loops
